@@ -1,0 +1,48 @@
+用户提交订单
+     |
+     v
++------------------+
+|    Service A     | ← 接收订单，生成 orderObj + traceId
++------------------+
+        |
+        v
+   [OrderQueue] ← RabbitMQ 队列
+        |
+        +------------+
+        |            |
+        v            v
++------------+   +------------+
+| Service B  |   | Service C  |
+| 扣库存     |   | 扣款       |
++-----+------+   +-----+------+
+      | success      | success
+      |              |
+      v              v
+[StageResultQueue] ← 消息内容包括：orderId, serviceName, status
+      |
+      v
++----------------------+
+|  ResultAggregator    | ← Program E 拆成单一责任服务
+|  (Program E Part 1)  |
++----------------------+
+| - Redis 保存 order 处理状态：
+|   e.g. order_123 = { B: success, C: pending }
+| - 聚合多个阶段的结果
+| - 若全部成功：推入 OrderSuccessQueue
+| - 若任一失败：推入 OrderFailedStageQueue
++----------------------+
+       |
+  +----+----+
+  |         |
+  v         v
+[OrderSuccessQueue]    [OrderFailedStageQueue]
+   |                        |
+   v                        v
++-------------+         +-------------+
+| Dispatcher  |         | Rollbacker  |
+| (Program E2)|         | (Program E3)|
++-------------+         +-------------+
+| → Service D           | → ServiceB.rollback()
+| → Service E           | → ServiceC.refund()
+| → Service F           | → 写入补偿日志
++-------------+         +-------------+

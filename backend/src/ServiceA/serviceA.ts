@@ -32,8 +32,8 @@ export const placeOrderHandler = async (req: Request, res: Response) => {
             message: "Order placed successfully",
             data: order,
         };
-        return res.status(201).json(response);
-
+        return res.status(201).json(response); // here we return a object just for test :
+        
     }catch(err){
         const response: ApiResponse<null> = {
             success: false,

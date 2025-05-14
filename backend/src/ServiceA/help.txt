@@ -1,1 +1,14 @@
 Service A : response to acccept User request and than package into a object 
+
+postman test : 
+
+{
+  "userId": 123,
+  "items": [
+    { "productId": 1, "quantity": 2 },
+    { "productId": 5, "quantity": 1 }
+  ],
+  "paymentMethod": "credit_card",
+  "shippingAddress": "Somewhere in KL"
+}
+
